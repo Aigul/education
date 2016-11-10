@@ -2,6 +2,10 @@ package ru.innopolis.university.project.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -13,15 +17,16 @@ import java.io.IOException;
  * Created by innopolis on 30.10.16.
  * Controller для выхода из системы
  */
-public class LogoutController extends HttpServlet {
+@Controller
+public class LogoutController extends BaseController {
 
     private Logger logger = LoggerFactory.getLogger(LogoutController.class);
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getSession().invalidate();
+    @RequestMapping(value = "/logout", method = RequestMethod.GET)
+    public ModelAndView getLogoutPage() {
+        request.getSession().invalidate();
         logger.debug("session invalidate");
-        req.getRequestDispatcher("login.jsp").forward(req, resp);
         logger.debug("user logout");
+        return new ModelAndView("login");
     }
 }

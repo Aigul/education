@@ -9,9 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.innopolis.university.project.controller.LoginController;
-import ru.innopolis.university.project.model.User;
-import ru.innopolis.university.project.services.UserDAO;
+import ru.innopolis.university.project.entity.User;
+import ru.innopolis.university.project.repository.UserRepository;
 
 import java.sql.SQLException;
 
@@ -32,7 +31,7 @@ public class UserDAOTest {
 
     @Test
     public void testFind() throws SQLException {
-        final UserDAO userDAO = context.mock(UserDAO.class);
+        final UserRepository userRepository = context.mock(UserRepository.class);
         String email = "Hannanova94@mail.com";
         User user = new User();
         user.setId(1);
@@ -41,11 +40,11 @@ public class UserDAOTest {
         user.setEmail(email);
         user.setPassword("12345");
         context.checking(new Expectations(){{
-            oneOf(userDAO).find(email);
+            oneOf(userRepository).findByEmail(email);
             will(returnValue(user));
         }});
 
-        Assert.assertEquals(user, userDAO.find(email));
+        Assert.assertEquals(user, userRepository.findByEmail(email));
     }
 
     @After

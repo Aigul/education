@@ -2,60 +2,56 @@ package ru.innopolis.university.project.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.innopolis.university.project.model.User;
-import ru.innopolis.university.project.services.UserDAO;
-import ru.innopolis.university.project.services.impl.UserDAOImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+import ru.innopolis.university.project.entity.Roles;
+import ru.innopolis.university.project.entity.User;
+import ru.innopolis.university.project.services.UserService;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.SQLException;
 
 /**
  * Created by innopolis on 28.10.16.
  * Controller для регистрации пользователя
  */
-public class RegistrController extends HttpServlet {
+@Controller
+public class RegistrController extends BaseController {
 
     private Logger logger = LoggerFactory.getLogger(RegistrController.class);
 
-    private UserDAO userDAO = new UserDAOImpl();
+    @Autowired
+    private UserService userService;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    @RequestMapping(value = "/registration", method = RequestMethod.GET)
+    public ModelAndView getRegistrationPage() {
         logger.debug("Get registration.jsp");
-        req.getRequestDispatcher("registration.jsp").forward(req, resp);
+        return new ModelAndView("registration");
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-
+    @RequestMapping(value = "/registration", method = RequestMethod.POST)
+    public ModelAndView registrationUser() throws ServletException, IOException {
         User user = new User();
-        user.setEmail(req.getParameter("email"));
-        user.setPassword(req.getParameter("password"));
-        user.setName(req.getParameter("name"));
-        user.setAge(Integer.parseInt(req.getParameter("age")));
+        user.setEmail(request.getParameter("email"));
+        user.setPassword(request.getParameter("password"));
+        user.setName(request.getParameter("name"));
+        user.setAge(Integer.parseInt(request.getParameter("age")));
+        user.setRole(Roles.ROLE_USER);
 
         logger.debug("User = " + user.toString());
 
-        try {
-            userDAO.add(user);
-            logger.debug("User added");
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
-            if ("23505".equals(e.getSQLState())){
-                logger.error("Email is dublicate");
-                req.setAttribute("error" , "Этот email уже зарегистрирован");
-                req.getRequestDispatcher("registration.jsp").forward(req,resp);
-                return;
-            }
+        User userReseult = userService.add(user);
+        if(userReseult.getId() == 0L && userReseult.getEmail().isEmpty() && userReseult.getAge() == 0){
+            logger.error("Email is dublicate");
+            request.setAttribute("error" , "Этот email уже зарегистрирован");
+            request.getRequestDispatcher("views/registration.jsp").forward(request, response);
+            return null;
         }
+        logger.debug("User added");
 
-        resp.sendRedirect("/login");
+        return new ModelAndView("login");
     }
 }
